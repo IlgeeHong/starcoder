@@ -6,25 +6,8 @@ from pathlib import Path
 from typing import Tuple
 from fairscale.nn.model_parallel.initialize import initialize_model_parallel
 
-def setup_model_parallel() -> Tuple[int, int]:
-    local_rank = int(os.environ.get("LOCAL_RANK", -1))
-    world_size = int(os.environ.get("WORLD_SIZE", -1))
-
-    torch.distributed.init_process_group("nccl")
-    initialize_model_parallel(world_size)
-    torch.cuda.set_device(local_rank)
-
-    # seed must be the same in all processes
-    torch.manual_seed(1)
-    return local_rank, world_size
-
-checkpoint = "bigcode/starcoder"
-checkpoints = sorted(Path(checkpoint).glob("*.pth"))
-
-print(checkpoints)
-
-# def load(checkpoint: str, local_rank: int, world_size: int,):
-
+with smp.tensor_parallelism():
+    model = AutoModelForCausalLM.from_config("bigcode/starcoder_config")
 
 # checkpoint = "bigcode/starcoder"
 # device = "cuda" # for GPU usage or "cpu" for CPU usage
